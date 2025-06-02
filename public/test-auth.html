@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EliteReplicas Auth API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>EliteReplicas Auth API Test</h1>
+    <p>Use this page to test the authentication API routes we fixed.</p>
+
+    <div class="test-section">
+        <h2>User Registration</h2>
+        <form id="register-form">
+            <div class="form-group">
+                <label for="reg-name">Name:</label>
+                <input type="text" id="reg-name" required>
+            </div>
+            <div class="form-group">
+                <label for="reg-email">Email:</label>
+                <input type="email" id="reg-email" required>
+            </div>
+            <div class="form-group">
+                <label for="reg-password">Password:</label>
+                <input type="password" id="reg-password" required>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <div id="register-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Email Verification</h2>
+        <form id="verify-form">
+            <div class="form-group">
+                <label for="verify-token">Verification Token:</label>
+                <input type="text" id="verify-token" required>
+            </div>
+            <button type="submit">Verify Email</button>
+        </form>
+        <div id="verify-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Password Reset Request</h2>
+        <form id="reset-request-form">
+            <div class="form-group">
+                <label for="reset-email">Email:</label>
+                <input type="email" id="reset-email" required>
+            </div>
+            <button type="submit">Request Password Reset</button>
+        </form>
+        <div id="reset-request-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Password Reset Confirmation</h2>
+        <form id="reset-confirm-form">
+            <div class="form-group">
+                <label for="reset-token">Reset Token:</label>
+                <input type="text" id="reset-token" required>
+            </div>
+            <div class="form-group">
+                <label for="new-password">New Password:</label>
+                <input type="password" id="new-password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password:</label>
+                <input type="password" id="confirm-password" required>
+            </div>
+            <button type="submit">Reset Password</button>
+        </form>
+        <div id="reset-confirm-result" class="result"></div>
+    </div>
+
+    <script>
+        // Helper function to display results
+        function displayResult(elementId, data, isSuccess = true) {
+            const resultElement = document.getElementById(elementId);
+            resultElement.innerHTML = JSON.stringify(data, null, 2);
+            resultElement.className = isSuccess ? 'result success' : 'result error';
+        }
+
+        // User Registration
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const response = await fetch('/api/users/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                displayResult('register-result', data, data.success);
+            } catch (error) {
+                displayResult('register-result', { error: error.message }, false);
+            }
+        });
+
+        // Email Verification
+        document.getElementById('verify-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const token = document.getElementById('verify-token').value;
+
+            try {
+                const response = await fetch(`/api/users/verify-email?token=${encodeURIComponent(token)}`, {
+                    method: 'GET'
+                });
+                
+                const data = await response.json();
+                displayResult('verify-result', data, data.success);
+            } catch (error) {
+                displayResult('verify-result', { error: error.message }, false);
+            }
+        });
+
+        // Password Reset Request
+        document.getElementById('reset-request-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('reset-email').value;
+
+            try {
+                const response = await fetch('/api/users/reset-password/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                displayResult('reset-request-result', data, data.success);
+            } catch (error) {
+                displayResult('reset-request-result', { error: error.message }, false);
+            }
+        });
+
+        // Password Reset Confirmation
+        document.getElementById('reset-confirm-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const token = document.getElementById('reset-token').value;
+            const password = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            try {
+                const response = await fetch('/api/users/reset-password/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token, password, confirmPassword })
+                });
+                
+                const data = await response.json();
+                displayResult('reset-confirm-result', data, data.success);
+            } catch (error) {
+                displayResult('reset-confirm-result', { error: error.message }, false);
+            }
+        });
+    </script>
+</body>
+</html>
